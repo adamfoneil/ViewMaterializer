@@ -6,17 +6,41 @@ namespace ViewMaterializer
 {
 	public static class AdoUtil
 	{
+		public static DataTable QueryCommand(SqlCommand command)
+		{
+			using (var adapter = new SqlDataAdapter(command))
+			{
+				DataTable result = new DataTable();
+				adapter.Fill(result);
+				return result;
+			}
+		}
+
+		public static DataRow QueryCommandRow(SqlCommand command)
+		{
+			using (var adapter = new SqlDataAdapter(command))
+			{
+				DataTable result = new DataTable();
+				adapter.Fill(result);
+				return result.Rows[0];
+			}
+		}
+
 		public static DataTable QueryTable(this SqlConnection connection, string selectQuery, Action<SqlCommand> setParameters = null)
 		{
 			using (var cmd = new SqlCommand(selectQuery, connection))
 			{
 				setParameters?.Invoke(cmd);
-				using (var adapter = new SqlDataAdapter(cmd))
-				{
-					DataTable result = new DataTable();
-					adapter.Fill(result);
-					return result;
-				}
+				return QueryCommand(cmd);
+			}
+		}
+
+		public static DataRow QueryCommandRow(this SqlConnection connection, string selectQuery, Action<SqlCommand> setParameters = null)
+		{
+			using (var cmd = new SqlCommand(selectQuery, connection))
+			{
+				setParameters?.Invoke(cmd);
+				return QueryCommandRow(cmd);
 			}
 		}
 
