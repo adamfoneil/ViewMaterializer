@@ -16,7 +16,7 @@ namespace ViewMaterializer
 			}
 		}
 
-		public static DataRow QueryCommandRow(SqlCommand command)
+		public static DataRow QueryRow(SqlCommand command)
 		{
 			using (var adapter = new SqlDataAdapter(command))
 			{
@@ -35,19 +35,25 @@ namespace ViewMaterializer
 			}
 		}
 
-		public static DataRow QueryCommandRow(this SqlConnection connection, string selectQuery, Action<SqlCommand> setParameters = null)
+		public static DataRow QueryRow(this SqlConnection connection, string selectQuery, Action<SqlCommand> setParameters = null)
 		{
 			using (var cmd = new SqlCommand(selectQuery, connection))
 			{
 				setParameters?.Invoke(cmd);
-				return QueryCommandRow(cmd);
+				return QueryRow(cmd);
 			}
 		}
 
-		public static T QueryValue<T>(this SqlConnection connection, string query, Action<SqlCommand> setParameters = null)
+		public static T QueryValue<T>(this SqlConnection connection, string selectQuery, Action<SqlCommand> setParameters = null)
 		{
-			var table = QueryTable(connection, query, setParameters);
+			var table = QueryTable(connection, selectQuery, setParameters);
 			return table.Rows[0].Field<T>(table.Columns[0]);
+		}
+
+		public static bool QueryRowExists(this SqlConnection connection, string selectQuery, Action<SqlCommand> setParameters = null)
+		{
+			var row = QueryRow(connection, selectQuery, setParameters);
+			return (row != null);
 		}
 
 		public static void Execute(this SqlConnection connection, string commandText, CommandType commandType = CommandType.Text, Action<SqlCommand> setParameters = null)

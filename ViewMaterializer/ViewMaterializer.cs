@@ -43,7 +43,11 @@ namespace ViewMaterializer
 
 			string[] keyColumns = GetPrimaryKeyColumns(connection, TargetTable);
 
-			using (SqlCommand cmd = BuildViewSliceCommand(connection, keyColumns, out string query))
+			ValidateKeyColumns(changes, keyColumns);
+
+			string whereClause = string.Join(" AND ", keyColumns.Select(col => $"[{col}]=@{col}"));
+
+			using (SqlCommand cmd = BuildViewSliceCommand(connection, whereClause, out string query))
 			{				
 				foreach (DataRow keyValues in changes.Rows)
 				{
@@ -51,11 +55,26 @@ namespace ViewMaterializer
 					DataRow viewRow = GetViewSlice(cmd, keyValues);
 					OnGetViewSlice(connection, sw.Elapsed, query, keyValues);
 
-					MergeRowIntoTarget(connection, keyValues, viewRow);
+					MergeRowIntoTarget(connection, whereClause, keyValues, viewRow);
 				}				
 			}
 
 			SetLatestSyncVersion(connection, GetCurrentVersion(connection));
+		}
+
+		/// <summary>
+		/// Need to make sure the columns in the changes table match the keyColumns
+		/// </summary>
+		private void ValidateKeyColumns(DataTable changes, string[] keyColumns)
+		{
+			var changeColumnsOrdered = changes.Columns.OfType<DataColumn>().Select(col => col.ColumnName.ToLower()).OrderBy(s => s).ToArray();
+			var keyColumnsOrdered = keyColumns.Select(s => s.ToLower()).OrderBy(s => s).ToArray();
+			if (!changeColumnsOrdered.SequenceEqual(keyColumnsOrdered))
+			{
+				string changeColumnStr = string.Join(", ", changeColumnsOrdered);
+				string keyColumnStr = string.Join(", ", keyColumnsOrdered);
+				throw new InvalidOperationException($"Change table columns and target table primary key columns must match.\r\nChange columns found: {changeColumnStr}\r\nKey columns found: {keyColumnStr}");
+			}
 		}
 
 		/// <summary>
@@ -71,11 +90,11 @@ namespace ViewMaterializer
 		/// </summary>
 		/// <param name="connection"></param>
 		/// <param name="viewRow"></param>
-		private void MergeRowIntoTarget(SqlConnection connection, DataRow keyValues, DataRow viewRow)
+		private void MergeRowIntoTarget(SqlConnection connection, string whereClause, DataRow keyValues, DataRow viewRow)
 		{
-			if (TargetRowExists(connection, TargetTable, keyValues, viewRow))
+			if (TargetRowExists(connection, TargetTable, whereClause, keyValues, viewRow))
 			{
-				UpdateTarget(connection, TargetTable, keyValues, viewRow);
+				UpdateTarget(connection, TargetTable, whereClause, keyValues, viewRow);
 			}
 			else
 			{
@@ -83,27 +102,52 @@ namespace ViewMaterializer
 			}
 		}
 
-		private void InsertTarget(SqlConnection connection, string targetTable, DataRow viewRow)
+		private bool TargetRowExists(SqlConnection connection, string targetTable, string whereClause, DataRow keyValues, DataRow viewRow)
 		{
-			throw new NotImplementedException();
+			return connection.QueryRowExists($"SELECT 1 FROM {targetTable} WHERE {whereClause}", (cmd) =>
+			{
+				foreach (DataColumn col in keyValues.Table.Columns)
+				{
+					cmd.Parameters.AddWithValue(col.ColumnName, keyValues[col.ColumnName]);
+				}
+			});
 		}
 
-		private void UpdateTarget(SqlConnection connection, string targetTable, DataRow keyValues, DataRow viewRow)
+		private static void InsertTarget(SqlConnection connection, string targetTable, DataRow viewRow)
 		{
-			throw new NotImplementedException();
+			var columns = viewRow.Table.Columns.OfType<DataColumn>().Select(col => col.ColumnName).ToArray();
+			string columnList = string.Join(", ", columns.Select(s => $"[{s}]"));
+			string valueList = string.Join(", ", columns.Select(s => $"@{s}"));
+			connection.Execute(
+				$@"INSERT INTO {targetTable} ({columnList}) VALUES ({valueList})", CommandType.Text, (cmd) =>
+				{
+					foreach (DataColumn col in viewRow.Table.Columns)
+					{
+						cmd.Parameters.AddWithValue(col.ColumnName, viewRow[col.ColumnName]);
+					}
+				});
 		}
 
-		private bool TargetRowExists(SqlConnection connection, string targetTable, DataRow keyValues, DataRow viewRow)
+		private static void UpdateTarget(SqlConnection connection, string targetTable, string whereClause, DataRow keyValues, DataRow viewRow)
 		{
-			throw new NotImplementedException();
+			var keyColumns = keyValues.Table.Columns.OfType<DataColumn>().Select(col => col.ColumnName).ToArray();
+			var setColumns = viewRow.Table.Columns.OfType<DataColumn>().Select(col => col.ColumnName).Except(keyColumns).ToArray();
+
+			string setColumnList = string.Join(", ", setColumns.Select(col => $"[{col}]=@{col}"));
+
+			connection.Execute($"UPDATE {targetTable} SET {setColumns} WHERE {whereClause}", CommandType.Text, (cmd) =>
+			{
+				foreach (string keyCol in keyColumns) cmd.Parameters.AddWithValue(keyCol, keyValues[keyCol]);
+				foreach (string setCol in setColumns) cmd.Parameters.AddWithValue(setCol, viewRow[setCol]);
+			});
 		}
 
 		/// <summary>
 		/// Builds a query that filters the SourceView based on a set of primary key columns
 		/// </summary>
-		private SqlCommand BuildViewSliceCommand(SqlConnection connection, string[] keyColumns, out string query)
+		private SqlCommand BuildViewSliceCommand(SqlConnection connection, string whereClause, out string query)
 		{
-			query = $"SELECT * FROM {SourceView} WHERE {string.Join(" AND ", keyColumns.Select(col => $"[{col}]=@{col}"))}";
+			query = $"SELECT * FROM {SourceView} WHERE {whereClause}";
 			return new SqlCommand(query, connection);
 		}
 
@@ -115,10 +159,10 @@ namespace ViewMaterializer
 		{
 			foreach (DataColumn col in keyValues.Table.Columns)
 			{
-				command.Parameters[col.ColumnName].Value = keyValues[col.ColumnName];
+				command.Parameters.AddWithValue(col.ColumnName, keyValues[col.ColumnName]);				
 			}
 
-			return AdoUtil.QueryCommandRow(command);
+			return AdoUtil.QueryRow(command);
 		}
 
 		private static string[] GetPrimaryKeyColumns(SqlConnection connection, string targetTable)
