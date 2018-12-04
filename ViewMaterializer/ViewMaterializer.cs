@@ -56,7 +56,7 @@ namespace ViewMaterializer
 					OnGetViewSlice(connection, sw.Elapsed, query, keyValues);
 
 					MergeRowIntoTarget(connection, whereClause, keyValues, viewRow);
-				}				
+				}
 			}
 
 			SetLatestSyncVersion(connection, GetCurrentVersion(connection));
@@ -135,7 +135,7 @@ namespace ViewMaterializer
 
 			string setColumnList = string.Join(", ", setColumns.Select(col => $"[{col}]=@{col}"));
 
-			connection.Execute($"UPDATE {targetTable} SET {setColumns} WHERE {whereClause}", CommandType.Text, (cmd) =>
+			connection.Execute($"UPDATE {targetTable} SET {setColumnList} WHERE {whereClause}", CommandType.Text, (cmd) =>
 			{
 				foreach (string keyCol in keyColumns) cmd.Parameters.AddWithValue(keyCol, keyValues[keyCol]);
 				foreach (string setCol in setColumns) cmd.Parameters.AddWithValue(setCol, viewRow[setCol]);
@@ -157,6 +157,7 @@ namespace ViewMaterializer
 		/// </summary>
 		private DataRow GetViewSlice(SqlCommand command, DataRow keyValues)
 		{
+			command.Parameters.Clear();
 			foreach (DataColumn col in keyValues.Table.Columns)
 			{
 				command.Parameters.AddWithValue(col.ColumnName, keyValues[col.ColumnName]);				

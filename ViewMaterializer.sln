@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28307.106
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ViewMaterializer", "ViewMaterializer\ViewMaterializer.csproj", "{3A54AF25-F91D-4172-BFE0-EB6D4935C4CD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApp", "SampleApp\SampleApp.csproj", "{2462FE90-F7FF-454D-B2EF-D1AC38BB06A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{3A54AF25-F91D-4172-BFE0-EB6D4935C4CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A54AF25-F91D-4172-BFE0-EB6D4935C4CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A54AF25-F91D-4172-BFE0-EB6D4935C4CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2462FE90-F7FF-454D-B2EF-D1AC38BB06A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2462FE90-F7FF-454D-B2EF-D1AC38BB06A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2462FE90-F7FF-454D-B2EF-D1AC38BB06A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2462FE90-F7FF-454D-B2EF-D1AC38BB06A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

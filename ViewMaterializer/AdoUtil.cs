@@ -58,6 +58,7 @@ namespace ViewMaterializer
 
 		public static void Execute(this SqlConnection connection, string commandText, CommandType commandType = CommandType.Text, Action<SqlCommand> setParameters = null)
 		{
+			if (connection.State == ConnectionState.Closed) connection.Open();
 			using (var cmd = new SqlCommand(commandText, connection))
 			{
 				cmd.CommandType = commandType;
