@@ -9,7 +9,7 @@ namespace SampleApp
 		private AppDictionary _session = null;
 		private const string _key = "LastSyncVersion";
 
-		public SampleViewMaterializer(string connectionString, string sourceView, string changeFunction, string targetTable) : base(sourceView, targetTable, changeFunction)
+		public SampleViewMaterializer(string connectionString, string sourceView, string targetTable, string changeFunction) : base(sourceView, targetTable, changeFunction)
 		{
 			_session = new AppDictionary(connectionString);
 			_session.Deserializers.Add(typeof(long), (s) => JsonConvert.DeserializeObject<long>(s));

@@ -16,7 +16,7 @@ namespace SampleApp
 	{
 		static void Main(string[] args)
 		{
-			var vm = new SampleViewMaterializer(GetConnectionString(), "dbo.SalesPivot", "dbo.FnSalesChanges", "rpt.SalesPivot");
+			var vm = new SampleViewMaterializer(GetConnectionString(), "dbo.SalesPivot", "rpt.SalesPivot", "dbo.FnSalesChanges");
 
 			using (var cn = GetConnection())
 			{
