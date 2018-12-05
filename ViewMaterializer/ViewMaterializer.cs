@@ -8,7 +8,7 @@ namespace ViewMaterializer
 {
 	public abstract class ViewMaterializer
 	{
-		public ViewMaterializer(string sourceView, string changesFunction, string targetTable)
+		public ViewMaterializer(string sourceView, string targetTable, string changesFunction)
 		{
 			SourceView = sourceView;
 			ChangesFunction = changesFunction;
