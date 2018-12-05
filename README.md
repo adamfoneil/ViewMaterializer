@@ -28,7 +28,7 @@ A sample conole app is [here](https://github.com/adamosoftware/ViewMaterializer/
 
 - The `targetTable` is created [here](https://github.com/adamosoftware/ViewMaterializer/blob/master/SampleApp/Sql/Script.sql#L75) with a separate `rpt` schema. I executing the `SELECT...INTO` the target table after generating about 600K sample Sales records, then I added the proper constraints and primary key so my example would work.
 
-- The `changeFunction` sample [here](https://github.com/adamosoftware/ViewMaterializer/blob/master/SampleApp/Sql/Script.sql#L85).
+- The `changeFunction` sample [here](https://github.com/adamosoftware/ViewMaterializer/blob/master/SampleApp/Sql/Script.sql#L85). The purpose of this, as I said above, is to provide an efficient way of determining what's changed since the last synchronization. Moreover, the columns of your change function must match the primary key columns of the `targetTable` so that ViewMaterializer can tell exactly what to refresh in the `targetTable`.
 
 - As I said above, `ViewMaterializer` is abstract because I didn't want to lock you into a single method of persisting the change tracking version number. You can see how I did it in the sample app with the [SampleViewMaterializer](https://github.com/adamosoftware/ViewMaterializer/blob/master/SampleApp/SampleViewMaterializer.cs) object, which uses my [DbDictionary.SqlServer](https://github.com/adamosoftware/SessionData) thing.
 
