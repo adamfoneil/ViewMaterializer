@@ -16,6 +16,8 @@ The heart of my solution is an abstract class [ViewMaterializer](https://github.
 
 Change tracking requires managing a version number in your application. `ViewMaterializer` is abstract because I didn't have a one-size-fits-all approach to persisting that number. Therefore, to implement `ViewMaterializer` you would need to implement methods for saving and retrieving the change tracking version. I show an example of this in the sample app, described next.
 
+For low-level data access, I considered Dapper at first, which I love. But due to this project's dynamic nature, I switched to old-school ADO.NET, and made a small library of helper methods [here](https://github.com/adamosoftware/ViewMaterializer/blob/master/ViewMaterializer/AdoUtil.cs).
+
 ## Sample app
 
 A sample conole app is [here](https://github.com/adamosoftware/ViewMaterializer/blob/master/SampleApp/Program.cs). It is a highly simplified sales order database of items, regions, and orders. These are some things to note about the sample app:
